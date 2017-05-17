@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Welcome To UESTC-Map</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.0.1/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <!-- <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script> -->
+    <script src="https://openlayers.org/en/v4.0.1/build/ol.js"></script>
+
+</head>
+  <style type="text/css">
+    body,html,div,ul,li,iframe,p,img{border:none;padding:0;margin:0;
+      font-size: 14px;font-family:"微软雅黑";}
+    /*#map{width:100%;height:100%;positiion:absolute;} */
+    #map {
+        height: 685px;
+        width: 768px;
+        float: left;}
+    .layerControl{position:absolute;bottom:5px;min-width:200px;
+        max-height:200px;right:0px;top:5px;
+        z-index:2001;
+        color:#ffffff;background-color:#4c4e5a;
+        border-width: 10px;
+        border-radius: 10px;
+        border-color: #000 #000 #000 #000;
+      }
+      .layerControl .title { font-weight:bold;font-size:15px;
+                             margin:10px;}
+      .layerTree li { list-style:none;margin:5px 10px;}
+  </style>
+</head>
+
+</body>
+    <div id="map">
+      <div id="layerControl" class="layerControl">
+          <div class="title"><lable>图层列表</lable></div>
+          <ul id="layerTree" class="layerTree"></ul>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+        var layer = new Array();
+        var layerName = new Array();
+        var layerVisibility = new Array();
+        //var range = new Array();//////////////////////////////////////////////////////////
+
+    function loadLayersControl(map,id) {
+        var treeContent = document.getElementById(id);
+        var layers = map.getLayers();
+        for (var i =0; i < layers.getLength(); i++ ){
+          layer[i] = layers.item(i);
+          layerName[i] = layer[i].get('name');
+          layerVisibility[i] = layer[i].getVisible();
+          //range[i] = layer[i].get('bounds');/////////////////////////////////////////////////
+
+          //var elementbounds = range[i];/////////////////////////////////////////////////////
+          var elementLi = document.createElement('li');
+          treeContent.appendChild(elementLi);
+
+          var elementInput = document.createElement('input');
+          elementInput.type = "Checkbox";
+          elementInput.name = "layers";
+          elementLi.appendChild(elementInput);
+
+          var elementLable = document.createElement('lable');
+          elementLable.className = "layer";
+
+          setInnerText(elementLable,layerName[i]);
+          elementLi.appendChild(elementLable);
+
+          if (layerVisibility[i]) {
+            elementInput.checked = true;
+          }
+          addChangeEvent(elementInput,layer[i]);
+        }
+      }
+
+      function addChangeEvent(element,layer) {
+        element.onclick = function () {
+          if (element.checked){
+            layer.setVisible(true);
+          }
+          else {
+            layer.setVisible(false);
+          }
+        }
+      }
+
+      // 动态设置元素文本内容（兼容）//
+      function setInnerText(element, text)  {
+        if (typeof element.textContent == "string") {
+          element.textContent = text;
+        } else {
+          element.innerText = text;
+        }
+      }
+
+      var format = 'image/png';
+
+      var bounds = [103.921,30.74,103.93,30.762];//范围
+
+      var projection = new ol.proj.Projection({
+          code: 'EPSG:4326',
+          units: 'degrees',
+          axisOrientation: 'neu'
+      });
+
+
+      var map = new ol.Map({
+
+          controls: ol.control.defaults({
+              attribution: false
+          }).extend([
+              new ol.control.ScaleLine()
+          ]),
+
+          target: 'map',
+
+          layers: [
+            new ol.layer.Image({
+                source: new ol.source.ImageWMS({
+                  ratio: 1,
+                  url: 'http://localhost:8080/geoserver/activity_center/wms',
+                  params: {
+                      'FORMAT': format,
+                      'VERSION': '1.1.0',
+                    //  STYLES: '',
+                      LAYERS: 'activity_center:Campus',
+                   }
+                }),
+                //bounds:'103.92658062828698,30.757526721862188,103.92717795124659,30.758466742190592',
+                name:'完整校园地图'
+            }),
+
+            new ol.layer.Image({
+                source: new ol.source.ImageWMS({
+                  ratio: 1,
+                  url: 'http://localhost:8080/geoserver/activity_center/wms',
+                  params: {
+                      'FORMAT': format,
+                      'VERSION': '1.1.0',
+                    //  STYLES: '',
+                      LAYERS: 'activity_center:F3',
+                    }
+                }),
+                //bounds:'103.9164858488088,30.739372633972806,103.94419231655591,30.76511785081476',
+                name:'活动中心F3'
+            })
+          ],
+
+          view: new ol.View({
+              projection: projection
+          })
+      });
+
+      loadLayersControl(map,"layerTree");
+      map.getView().fit(bounds, map.getSize());
+
+    </script>
+
+</body>
+</html>
